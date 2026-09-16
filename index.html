@@ -160,8 +160,59 @@
   }
   .none-missed{ font-size:14px; color:var(--ink-2); margin-bottom:24px; }
 
-  .result-actions{ display:flex; gap:10px; }
-  .result-actions .btn{ flex:1; }
+  .result-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .result-actions .btn{ flex:1 1 150px; }
+
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row .btn{ flex:1; }
+
+  /* ---- Quiz quit control ---- */
+  .quiz-topbar{ display:flex; justify-content:flex-end; margin-bottom:6px; }
+  .btn-quit-link{
+    background:none; border:none; font-family:inherit; font-size:12.5px; font-weight:700;
+    letter-spacing:.03em; color:var(--red); cursor:pointer; padding:4px 6px;
+  }
+  .btn-quit-link:hover{ text-decoration:underline; }
+
+  /* ---- History screen ---- */
+  .study-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .history-list{ display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
+  .history-item{ border:1px solid var(--line); border-radius:8px; padding:14px 16px; background:#fff; }
+  .history-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .history-score{ font-size:19px; font-weight:800; color:var(--navy); }
+  .history-date{ font-size:12px; color:var(--ink-3); }
+  .history-meta{ font-size:12.5px; color:var(--ink-2); margin-bottom:12px; }
+  .history-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .history-actions .btn{ flex:1 1 100px; padding:9px 12px; font-size:13px; }
+  .history-empty{ text-align:center; color:var(--ink-2); font-size:14px; padding:34px 0; }
+
+  /* ---- Study screen ---- */
+  .study-reveal-box{ text-align:center; margin-bottom:20px; }
+  .study-reveal-box .btn{ width:auto; padding:12px 26px; }
+  .study-answer-reveal{
+    font-size:19px; font-weight:800; color:var(--green); background:var(--green-bg);
+    border-radius:8px; padding:14px;
+  }
+  .study-nav{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .study-jump select{
+    padding:9px 10px; border-radius:6px; border:1.5px solid var(--line);
+    font-family:inherit; font-size:14px; background:#fff; color:var(--ink);
+  }
+
+  /* ---- Confirm modal (replaces native confirm(), which some embedded/sandboxed
+         viewers silently block) ---- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,25,48,0.55);
+    align-items:center; justify-content:center; padding:20px; z-index:1000;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{
+    background:var(--paper); border-radius:10px; border:1px solid var(--line);
+    box-shadow:var(--shadow); padding:24px; max-width:360px; width:100%;
+  }
+  .modal-box p{ margin:0 0 20px; font-size:15px; color:var(--ink); line-height:1.5; }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions .btn{ flex:1; }
 
   /* ---- Review screen ---- */
   .review-tag{
@@ -209,10 +260,18 @@
       </div>
 
       <button class="btn btn-primary" id="btn-start">Start Practice</button>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-ghost" id="btn-study">Study All Questions</button>
+        <button class="btn btn-ghost" id="btn-history">Quiz History</button>
+      </div>
     </div>
 
     <!-- QUIZ SCREEN -->
     <div class="screen" id="screen-quiz">
+      <div class="quiz-topbar">
+        <button class="btn-quit-link" id="btn-quit">✕ Quit Practice</button>
+      </div>
       <div class="progress-row">
         <div class="progress-label" id="progress-label">Question 1 of 100</div>
         <div class="progress-score" id="progress-score">Score: 0</div>
@@ -242,6 +301,7 @@
 
       <div class="result-actions">
         <button class="btn btn-ghost" id="btn-restart">New Practice Set</button>
+        <button class="btn btn-ghost" id="btn-retry-wrong" style="display:none;">Retry Wrong Answers</button>
         <button class="btn btn-primary" id="btn-review" style="display:none;">Review Missed</button>
       </div>
     </div>
@@ -255,8 +315,37 @@
       <div class="review-answer-line" id="review-correct"></div>
       <div class="review-nav">
         <button class="btn btn-ghost" id="btn-review-prev">← Previous</button>
-        <button class="btn btn-ghost" id="btn-review-exit">Back to Results</button>
+        <button class="btn btn-ghost" id="btn-review-exit">Back</button>
         <button class="btn btn-primary" id="btn-review-next">Next →</button>
+      </div>
+    </div>
+
+    <!-- HISTORY SCREEN -->
+    <div class="screen" id="screen-history">
+      <div class="study-topbar">
+        <div class="progress-label">Quiz History</div>
+        <button class="btn-quit-link" id="btn-history-exit">✕ Close</button>
+      </div>
+      <div id="history-list-wrap"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="btn-history-clear">Clear History</button>
+      </div>
+    </div>
+
+    <!-- STUDY SCREEN -->
+    <div class="screen" id="screen-study">
+      <div class="study-topbar">
+        <div class="progress-label" id="study-label">Question 1 of 100</div>
+        <button class="btn-quit-link" id="btn-study-exit">✕ Exit</button>
+      </div>
+      <div class="qimg-wrap"><img id="study-img" src="" alt="Question"></div>
+      <div class="study-reveal-box" id="study-reveal-box">
+        <button class="btn btn-ghost" id="btn-study-reveal">Show Answer</button>
+      </div>
+      <div class="study-nav">
+        <button class="btn btn-ghost" id="btn-study-prev">← Previous</button>
+        <div class="study-jump"><select id="study-jump-select"></select></div>
+        <button class="btn btn-ghost" id="btn-study-next">Next →</button>
       </div>
     </div>
 
@@ -265,11 +354,23 @@
   <div class="footer-note">Question images are cropped from the official 2026S IT Passport exam booklet · practice use only</div>
 </div>
 
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <p id="confirm-modal-text">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirm-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="confirm-modal-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script id="qdata" type="application/json">[{"number": 1, "answer": "B", "img": "images/q001.jpg"}, {"number": 2, "answer": "A", "img": "images/q002.jpg"}, {"number": 3, "answer": "D", "img": "images/q003.jpg"}, {"number": 4, "answer": "A", "img": "images/q004.jpg"}, {"number": 5, "answer": "B", "img": "images/q005.jpg"}, {"number": 6, "answer": "B", "img": "images/q006.jpg"}, {"number": 7, "answer": "D", "img": "images/q007.jpg"}, {"number": 8, "answer": "C", "img": "images/q008.jpg"}, {"number": 9, "answer": "C", "img": "images/q009.jpg"}, {"number": 10, "answer": "C", "img": "images/q010.jpg"}, {"number": 11, "answer": "B", "img": "images/q011.jpg"}, {"number": 12, "answer": "B", "img": "images/q012.jpg"}, {"number": 13, "answer": "B", "img": "images/q013.jpg"}, {"number": 14, "answer": "A", "img": "images/q014.jpg"}, {"number": 15, "answer": "B", "img": "images/q015.jpg"}, {"number": 16, "answer": "A", "img": "images/q016.jpg"}, {"number": 17, "answer": "B", "img": "images/q017.jpg"}, {"number": 18, "answer": "D", "img": "images/q018.jpg"}, {"number": 19, "answer": "A", "img": "images/q019.jpg"}, {"number": 20, "answer": "C", "img": "images/q020.jpg"}, {"number": 21, "answer": "C", "img": "images/q021.jpg"}, {"number": 22, "answer": "A", "img": "images/q022.jpg"}, {"number": 23, "answer": "B", "img": "images/q023.jpg"}, {"number": 24, "answer": "B", "img": "images/q024.jpg"}, {"number": 25, "answer": "C", "img": "images/q025.jpg"}, {"number": 26, "answer": "C", "img": "images/q026.jpg"}, {"number": 27, "answer": "C", "img": "images/q027.jpg"}, {"number": 28, "answer": "A", "img": "images/q028.jpg"}, {"number": 29, "answer": "B", "img": "images/q029.jpg"}, {"number": 30, "answer": "B", "img": "images/q030.jpg"}, {"number": 31, "answer": "D", "img": "images/q031.jpg"}, {"number": 32, "answer": "B", "img": "images/q032.jpg"}, {"number": 33, "answer": "D", "img": "images/q033.jpg"}, {"number": 34, "answer": "C", "img": "images/q034.jpg"}, {"number": 35, "answer": "B", "img": "images/q035.jpg"}, {"number": 36, "answer": "B", "img": "images/q036.jpg"}, {"number": 37, "answer": "C", "img": "images/q037.jpg"}, {"number": 38, "answer": "D", "img": "images/q038.jpg"}, {"number": 39, "answer": "D", "img": "images/q039.jpg"}, {"number": 40, "answer": "B", "img": "images/q040.jpg"}, {"number": 41, "answer": "D", "img": "images/q041.jpg"}, {"number": 42, "answer": "C", "img": "images/q042.jpg"}, {"number": 43, "answer": "D", "img": "images/q043.jpg"}, {"number": 44, "answer": "C", "img": "images/q044.jpg"}, {"number": 45, "answer": "B", "img": "images/q045.jpg"}, {"number": 46, "answer": "D", "img": "images/q046.jpg"}, {"number": 47, "answer": "A", "img": "images/q047.jpg"}, {"number": 48, "answer": "B", "img": "images/q048.jpg"}, {"number": 49, "answer": "D", "img": "images/q049.jpg"}, {"number": 50, "answer": "D", "img": "images/q050.jpg"}, {"number": 51, "answer": "A", "img": "images/q051.jpg"}, {"number": 52, "answer": "B", "img": "images/q052.jpg"}, {"number": 53, "answer": "C", "img": "images/q053.jpg"}, {"number": 54, "answer": "C", "img": "images/q054.jpg"}, {"number": 55, "answer": "D", "img": "images/q055.jpg"}, {"number": 56, "answer": "A", "img": "images/q056.jpg"}, {"number": 57, "answer": "B", "img": "images/q057.jpg"}, {"number": 58, "answer": "D", "img": "images/q058.jpg"}, {"number": 59, "answer": "A", "img": "images/q059.jpg"}, {"number": 60, "answer": "B", "img": "images/q060.jpg"}, {"number": 61, "answer": "C", "img": "images/q061.jpg"}, {"number": 62, "answer": "A", "img": "images/q062.jpg"}, {"number": 63, "answer": "A", "img": "images/q063.jpg"}, {"number": 64, "answer": "A", "img": "images/q064.jpg"}, {"number": 65, "answer": "A", "img": "images/q065.jpg"}, {"number": 66, "answer": "C", "img": "images/q066.jpg"}, {"number": 67, "answer": "C", "img": "images/q067.jpg"}, {"number": 68, "answer": "D", "img": "images/q068.jpg"}, {"number": 69, "answer": "C", "img": "images/q069.jpg"}, {"number": 70, "answer": "C", "img": "images/q070.jpg"}, {"number": 71, "answer": "B", "img": "images/q071.jpg"}, {"number": 72, "answer": "C", "img": "images/q072.jpg"}, {"number": 73, "answer": "D", "img": "images/q073.jpg"}, {"number": 74, "answer": "C", "img": "images/q074.jpg"}, {"number": 75, "answer": "C", "img": "images/q075.jpg"}, {"number": 76, "answer": "D", "img": "images/q076.jpg"}, {"number": 77, "answer": "B", "img": "images/q077.jpg"}, {"number": 78, "answer": "B", "img": "images/q078.jpg"}, {"number": 79, "answer": "C", "img": "images/q079.jpg"}, {"number": 80, "answer": "C", "img": "images/q080.jpg"}, {"number": 81, "answer": "C", "img": "images/q081.jpg"}, {"number": 82, "answer": "D", "img": "images/q082.jpg"}, {"number": 83, "answer": "D", "img": "images/q083.jpg"}, {"number": 84, "answer": "B", "img": "images/q084.jpg"}, {"number": 85, "answer": "A", "img": "images/q085.jpg"}, {"number": 86, "answer": "D", "img": "images/q086.jpg"}, {"number": 87, "answer": "D", "img": "images/q087.jpg"}, {"number": 88, "answer": "C", "img": "images/q088.jpg"}, {"number": 89, "answer": "D", "img": "images/q089.jpg"}, {"number": 90, "answer": "B", "img": "images/q090.jpg"}, {"number": 91, "answer": "B", "img": "images/q091.jpg"}, {"number": 92, "answer": "B", "img": "images/q092.jpg"}, {"number": 93, "answer": "B", "img": "images/q093.jpg"}, {"number": 94, "answer": "B", "img": "images/q094.jpg"}, {"number": 95, "answer": "B", "img": "images/q095.jpg"}, {"number": 96, "answer": "A", "img": "images/q096.jpg"}, {"number": 97, "answer": "D", "img": "images/q097.jpg"}, {"number": 98, "answer": "B", "img": "images/q098.jpg"}, {"number": 99, "answer": "B", "img": "images/q099.jpg"}, {"number": 100, "answer": "B", "img": "images/q100.jpg"}]</script>
 <script>
 (function(){
   var ALL_Q = JSON.parse(document.getElementById('qdata').textContent);
   var LETTERS = ['A','B','C','D'];
+  var HISTORY_KEY = 'itpecQuizHistory_v1';
+  var HISTORY_MAX = 50;
 
   var state = {
     count: 20,
@@ -280,6 +381,36 @@
     missed: []
   };
 
+  var studyState = { items: [], index: 0 };
+  var reviewSource = null; // {items, answers, returnScreen}
+
+  function loadHistory(){
+    try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+    catch(e){ return []; }
+  }
+  function saveHistoryList(list){
+    try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); }
+    catch(e){ /* storage unavailable — fail silently */ }
+  }
+  function saveHistoryEntry(s){
+    var total = s.quizItems.length;
+    var correct = Object.keys(s.answers).filter(function(k){return s.answers[k].correct;}).length;
+    var entry = {
+      id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      date: new Date().toISOString(),
+      total: total,
+      correct: correct,
+      shuffle: !!s.shuffle,
+      itemNumbers: s.quizItems.map(function(q){return q.number;}),
+      answers: s.answers,
+      missed: s.missed.slice()
+    };
+    var hist = loadHistory();
+    hist.unshift(entry);
+    if(hist.length > HISTORY_MAX){ hist = hist.slice(0, HISTORY_MAX); }
+    saveHistoryList(hist);
+  }
+
   function shuffleArr(arr){
     var a = arr.slice();
     for(var i=a.length-1;i>0;i--){
@@ -288,6 +419,34 @@
     }
     return a;
   }
+
+  // Custom confirm dialog — used instead of window.confirm(), which some
+  // embedded/sandboxed viewers silently block or throw on.
+  var confirmModal = document.getElementById('confirm-modal');
+  var confirmModalText = document.getElementById('confirm-modal-text');
+  var confirmModalOk = document.getElementById('confirm-modal-ok');
+  var confirmModalCancel = document.getElementById('confirm-modal-cancel');
+  var confirmModalCallback = null;
+  function askConfirm(message, onConfirm){
+    confirmModalText.textContent = message;
+    confirmModalCallback = onConfirm;
+    confirmModal.classList.add('show');
+  }
+  function closeConfirmModal(){
+    confirmModal.classList.remove('show');
+    confirmModalCallback = null;
+  }
+  confirmModalOk.addEventListener('click', function(){
+    var cb = confirmModalCallback;
+    closeConfirmModal();
+    if(cb){ cb(); }
+  });
+  confirmModalCancel.addEventListener('click', function(){
+    closeConfirmModal();
+  });
+  confirmModal.addEventListener('click', function(e){
+    if(e.target === confirmModal){ closeConfirmModal(); }
+  });
 
   function show(id){
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -329,10 +488,31 @@
     renderQuestion();
   });
 
+  // Start a quiz session from a specific, known set of question numbers
+  // (used by "Retry Wrong Answers" and "Retake" from history).
+  function startQuizFromNumbers(numbers, opts){
+    opts = opts || {};
+    var items = numbers.map(byNumber).filter(function(x){ return !!x; });
+    if(opts.shuffle){ items = shuffleArr(items); }
+    state.quizItems = items;
+    state.currentIndex = 0;
+    state.answers = {};
+    state.missed = [];
+    state.shuffle = !!opts.shuffle;
+    show('screen-quiz');
+    renderQuestion();
+  }
+
   // ---- Quiz screen ----
   var choiceRow = document.getElementById('choice-row');
   var feedback = document.getElementById('feedback');
   var btnNext = document.getElementById('btn-next');
+
+  document.getElementById('btn-quit').addEventListener('click', function(){
+    askConfirm('Quit this practice session? Your progress on this set won\'t be saved.', function(){
+      show('screen-setup');
+    });
+  });
 
   function renderQuestion(){
     var item = state.quizItems[state.currentIndex];
@@ -400,9 +580,11 @@
 
     var missedSection = document.getElementById('missed-section');
     var btnReview = document.getElementById('btn-review');
+    var btnRetryWrong = document.getElementById('btn-retry-wrong');
     if(state.missed.length === 0){
       missedSection.innerHTML = '<div class="none-missed">Perfect run — no missed questions.</div>';
       btnReview.style.display='none';
+      btnRetryWrong.style.display='none';
     } else {
       var html = '<div class="missed-title">Missed Questions ('+state.missed.length+')</div><div class="missed-grid">';
       state.missed.forEach(function(num){
@@ -411,7 +593,9 @@
       html += '</div>';
       missedSection.innerHTML = html;
       btnReview.style.display='inline-block';
+      btnRetryWrong.style.display='inline-block';
     }
+    saveHistoryEntry(state);
     show('screen-results');
   }
 
@@ -419,46 +603,170 @@
     show('screen-setup');
   });
 
+  document.getElementById('btn-retry-wrong').addEventListener('click', function(){
+    startQuizFromNumbers(state.missed.slice(), {shuffle:false});
+  });
+
   // ---- Review screen ----
+  // reviewSource = { items: [numbers...], answers: {number->{chosen,correct}}, returnScreen: 'screen-results'|'screen-history' }
   var reviewIndex = 0;
   function byNumber(num){
     return ALL_Q.filter(function(q){return q.number===num;})[0];
   }
-  function renderReview(){
-    var num = state.missed[reviewIndex];
-    var item = byNumber(num);
-    var ans = state.answers[num];
-    document.getElementById('review-label').textContent = 'Missed '+(reviewIndex+1)+' of '+state.missed.length+' — Q'+num;
-    document.getElementById('review-img').src = item.img;
-    document.getElementById('review-your').innerHTML = 'Your answer: <b style="color:var(--red)">'+ans.chosen+'</b>';
-    document.getElementById('review-correct').innerHTML = 'Correct answer: <b style="color:var(--green)">'+item.answer+'</b>';
-    document.getElementById('btn-review-prev').disabled = (reviewIndex===0);
-    document.getElementById('btn-review-next').textContent = (reviewIndex===state.missed.length-1) ? 'Done' : 'Next →';
-  }
-  document.getElementById('btn-review').addEventListener('click', function(){
+  function openReview(items, answersMap, returnScreen){
+    reviewSource = { items: items, answers: answersMap, returnScreen: returnScreen || 'screen-results' };
     reviewIndex = 0;
     show('screen-review');
     renderReview();
+  }
+  function renderReview(){
+    var num = reviewSource.items[reviewIndex];
+    var item = byNumber(num);
+    var ans = reviewSource.answers[num];
+    document.getElementById('review-label').textContent = 'Missed '+(reviewIndex+1)+' of '+reviewSource.items.length+' — Q'+num;
+    document.getElementById('review-img').src = item.img;
+    document.getElementById('review-your').innerHTML = 'Your answer: <b style="color:var(--red)">'+(ans ? ans.chosen : '—')+'</b>';
+    document.getElementById('review-correct').innerHTML = 'Correct answer: <b style="color:var(--green)">'+item.answer+'</b>';
+    document.getElementById('btn-review-prev').disabled = (reviewIndex===0);
+    document.getElementById('btn-review-next').textContent = (reviewIndex===reviewSource.items.length-1) ? 'Done' : 'Next →';
+  }
+  document.getElementById('btn-review').addEventListener('click', function(){
+    openReview(state.missed.slice(), state.answers, 'screen-results');
   });
   document.getElementById('btn-review-prev').addEventListener('click', function(){
     if(reviewIndex>0){ reviewIndex--; renderReview(); }
   });
   document.getElementById('btn-review-next').addEventListener('click', function(){
-    if(reviewIndex < state.missed.length-1){ reviewIndex++; renderReview(); }
-    else { show('screen-results'); }
+    if(reviewIndex < reviewSource.items.length-1){ reviewIndex++; renderReview(); }
+    else { show(reviewSource.returnScreen); }
   });
   document.getElementById('btn-review-exit').addEventListener('click', function(){
-    show('screen-results');
+    show(reviewSource.returnScreen);
   });
-
-  document.querySelectorAll('.missed-grid').length; // no-op
 
   document.addEventListener('click', function(e){
     if(e.target.classList.contains('missed-chip')){
       var num = parseInt(e.target.textContent.replace('Q',''),10);
-      reviewIndex = state.missed.indexOf(num);
-      show('screen-review');
+      var idx = state.missed.indexOf(num);
+      openReview(state.missed.slice(), state.answers, 'screen-results');
+      reviewIndex = idx;
       renderReview();
+    }
+  });
+
+  // ---- Study screen (browse every item, reveal answer on demand) ----
+  function openStudy(items){
+    studyState.items = items.slice();
+    studyState.index = 0;
+    var sel = document.getElementById('study-jump-select');
+    sel.innerHTML = '';
+    studyState.items.forEach(function(num, idx){
+      var opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = 'Q'+num;
+      sel.appendChild(opt);
+    });
+    show('screen-study');
+    renderStudy();
+  }
+  function resetStudyReveal(){
+    var box = document.getElementById('study-reveal-box');
+    box.innerHTML = '<button class="btn btn-ghost" id="btn-study-reveal">Show Answer</button>';
+    document.getElementById('btn-study-reveal').addEventListener('click', revealStudyAnswer);
+  }
+  function revealStudyAnswer(){
+    var num = studyState.items[studyState.index];
+    var item = byNumber(num);
+    document.getElementById('study-reveal-box').innerHTML =
+      '<div class="study-answer-reveal">Correct Answer: '+item.answer+'</div>';
+  }
+  function renderStudy(){
+    var num = studyState.items[studyState.index];
+    var item = byNumber(num);
+    document.getElementById('study-label').textContent =
+      'Question '+(studyState.index+1)+' of '+studyState.items.length+' — Q'+num;
+    document.getElementById('study-img').src = item.img;
+    document.getElementById('study-jump-select').value = studyState.index;
+    resetStudyReveal();
+  }
+  document.getElementById('btn-study').addEventListener('click', function(){
+    var all = ALL_Q.map(function(q){ return q.number; }).sort(function(a,b){ return a-b; });
+    openStudy(all);
+  });
+  document.getElementById('btn-study-exit').addEventListener('click', function(){
+    show('screen-setup');
+  });
+  document.getElementById('btn-study-prev').addEventListener('click', function(){
+    if(studyState.index>0){ studyState.index--; renderStudy(); }
+  });
+  document.getElementById('btn-study-next').addEventListener('click', function(){
+    if(studyState.index < studyState.items.length-1){ studyState.index++; renderStudy(); }
+  });
+  document.getElementById('study-jump-select').addEventListener('change', function(e){
+    studyState.index = parseInt(e.target.value,10);
+    renderStudy();
+  });
+
+  // ---- History screen ----
+  function renderHistoryList(){
+    var hist = loadHistory();
+    var wrap = document.getElementById('history-list-wrap');
+    if(hist.length === 0){
+      wrap.innerHTML = '<div class="history-empty">No quiz attempts yet — complete a practice set to see it here.</div>';
+      return;
+    }
+    var html = '<div class="history-list">';
+    hist.forEach(function(entry){
+      var pct = Math.round((entry.correct/entry.total)*100);
+      var d = new Date(entry.date);
+      var dateStr = d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) +
+        ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+      html += '<div class="history-item">'
+        + '<div class="history-top">'
+        +   '<div class="history-score">'+entry.correct+'/'+entry.total
+        +     ' <span style="font-size:13px;color:var(--gold-2);font-weight:700;">('+pct+'%)</span></div>'
+        +   '<div class="history-date">'+dateStr+'</div>'
+        + '</div>'
+        + '<div class="history-meta">'+entry.missed.length+' missed'+(entry.shuffle ? ' · shuffled' : '')+'</div>'
+        + '<div class="history-actions">'
+        +   '<button class="btn btn-ghost btn-hist-retake" data-id="'+entry.id+'">Retake</button>'
+        +   (entry.missed.length>0 ? '<button class="btn btn-ghost btn-hist-review" data-id="'+entry.id+'">Review</button>' : '')
+        +   '<button class="btn btn-ghost btn-hist-delete" data-id="'+entry.id+'">Delete</button>'
+        + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+  }
+  document.getElementById('btn-history').addEventListener('click', function(){
+    renderHistoryList();
+    show('screen-history');
+  });
+  document.getElementById('btn-history-exit').addEventListener('click', function(){
+    show('screen-setup');
+  });
+  document.getElementById('btn-history-clear').addEventListener('click', function(){
+    askConfirm('Clear all quiz history? This cannot be undone.', function(){
+      saveHistoryList([]);
+      renderHistoryList();
+    });
+  });
+  document.getElementById('history-list-wrap').addEventListener('click', function(e){
+    var id = e.target.getAttribute('data-id');
+    if(!id){ return; }
+    var hist = loadHistory();
+    var entry = hist.filter(function(h){ return h.id===id; })[0];
+    if(!entry){ return; }
+    if(e.target.classList.contains('btn-hist-retake')){
+      startQuizFromNumbers(entry.itemNumbers, {shuffle:false});
+    } else if(e.target.classList.contains('btn-hist-review')){
+      openReview(entry.missed.slice(), entry.answers, 'screen-history');
+    } else if(e.target.classList.contains('btn-hist-delete')){
+      askConfirm('Delete this history entry?', function(){
+        var updated = loadHistory().filter(function(h){ return h.id!==id; });
+        saveHistoryList(updated);
+        renderHistoryList();
+      });
     }
   });
 
