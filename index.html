@@ -142,6 +142,10 @@
     transition:border-color .15s, background .15s, transform .08s;
   }
   .choice-btn .c-letter{ font-size:19px; font-weight:800; color:var(--navy); }
+  .choice-btn .c-key-hint{
+    display:block; font-size:10.5px; font-weight:700; color:var(--ink-3);
+    margin-top:4px; letter-spacing:.03em;
+  }
   .choice-btn:hover:not(:disabled){ border-color:var(--gold-2); }
   .choice-btn:disabled{ cursor:default; }
   .choice-btn.correct{ border-color:var(--green); background:var(--green-bg); }
@@ -242,6 +246,18 @@
     padding:8px 10px; border-radius:6px; border:1.5px solid var(--line);
     font-family:inherit; font-size:14px; background:#fff; color:var(--ink); width:78px;
   }
+  .keybind-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; padding:14px 4px 2px;
+  }
+  @media (max-width:480px){ .keybind-grid{ grid-template-columns:1fr; } }
+  .keybind-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .keybind-btn{
+    min-width:64px; padding:8px 12px; border-radius:6px; border:1.5px solid var(--line);
+    background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:var(--ink);
+    cursor:pointer; text-align:center;
+  }
+  .keybind-btn:hover{ border-color:var(--gold-2); }
+  .keybind-btn.listening{ border-color:var(--gold-2); background:var(--paper-2); color:var(--gold-2); }
 
   /* ---- Review screen ---- */
   .review-tag{
@@ -353,6 +369,7 @@
         <button class="btn btn-ghost" id="btn-review-exit">Back</button>
         <button class="btn btn-primary" id="btn-review-next">Next →</button>
       </div>
+      <div class="t-sub" id="review-key-hint" style="text-align:center;margin-top:10px;display:none;">Tip: use ← → to move between questions</div>
     </div>
 
     <!-- HISTORY SCREEN -->
@@ -382,6 +399,7 @@
         <div class="study-jump"><select id="study-jump-select"></select></div>
         <button class="btn btn-ghost" id="btn-study-next">Next →</button>
       </div>
+      <div class="t-sub" id="study-key-hint" style="text-align:center;margin-top:10px;display:none;">Tip: use ← → to move between questions</div>
     </div>
 
     <!-- SETTINGS SCREEN -->
@@ -416,12 +434,34 @@
         <div class="toggle-row" style="margin-top:16px;">
           <div>
             <div class="t-label">Keyboard shortcuts</div>
-            <div class="t-sub">Press 1–4 on your keyboard to pick answers A–D</div>
+            <div class="t-sub">Pick answers by key, and use ←/→ to move through Review &amp; Study screens</div>
           </div>
           <label class="switch">
             <input type="checkbox" id="setting-keybinds">
             <span class="slider"></span>
           </label>
+        </div>
+        <div class="keybind-grid" id="keybind-grid">
+          <div class="keybind-row">
+            <span class="t-sub">Select option A</span>
+            <button type="button" class="keybind-btn" id="keybind-A" data-letter="A">1</button>
+          </div>
+          <div class="keybind-row">
+            <span class="t-sub">Select option B</span>
+            <button type="button" class="keybind-btn" id="keybind-B" data-letter="B">2</button>
+          </div>
+          <div class="keybind-row">
+            <span class="t-sub">Select option C</span>
+            <button type="button" class="keybind-btn" id="keybind-C" data-letter="C">3</button>
+          </div>
+          <div class="keybind-row">
+            <span class="t-sub">Select option D</span>
+            <button type="button" class="keybind-btn" id="keybind-D" data-letter="D">4</button>
+          </div>
+        </div>
+        <div class="settings-subrow" id="next-key-subrow">
+          <span class="t-sub">Advance to next question</span>
+          <button type="button" class="keybind-btn" id="keybind-NEXT">Space</button>
         </div>
       </div>
 
@@ -485,21 +525,36 @@
     autoAdvance: false,
     autoAdvanceDelayMs: 1200,
     keybinds: true,
+    answerKeys: {A:'1', B:'2', C:'3', D:'4'},
+    nextKey: ' ',
     showTimer: true,
     targetSecPerQ: 72
   };
   function loadSettings(){
+    var merged = {
+      autoAdvance: SETTINGS_DEFAULTS.autoAdvance,
+      autoAdvanceDelayMs: SETTINGS_DEFAULTS.autoAdvanceDelayMs,
+      keybinds: SETTINGS_DEFAULTS.keybinds,
+      answerKeys: Object.assign({}, SETTINGS_DEFAULTS.answerKeys),
+      nextKey: SETTINGS_DEFAULTS.nextKey,
+      showTimer: SETTINGS_DEFAULTS.showTimer,
+      targetSecPerQ: SETTINGS_DEFAULTS.targetSecPerQ
+    };
     try{
       var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
       if(saved && typeof saved === 'object'){
-        var merged = {};
         Object.keys(SETTINGS_DEFAULTS).forEach(function(k){
-          merged[k] = (k in saved) ? saved[k] : SETTINGS_DEFAULTS[k];
+          if(k === 'answerKeys'){
+            if(saved.answerKeys && typeof saved.answerKeys === 'object'){
+              merged.answerKeys = Object.assign({}, SETTINGS_DEFAULTS.answerKeys, saved.answerKeys);
+            }
+          } else if(k in saved){
+            merged[k] = saved[k];
+          }
         });
-        return merged;
       }
     }catch(e){ /* ignore */ }
-    return Object.assign({}, SETTINGS_DEFAULTS);
+    return merged;
   }
   function saveSettings(){
     try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
@@ -507,6 +562,20 @@
   }
   var settings = loadSettings();
   var settingsReturnScreen = 'screen-setup';
+  var listeningTarget = null; // 'A'|'B'|'C'|'D'|'NEXT'
+
+  function keyNorm(key){
+    return key.length === 1 ? key.toLowerCase() : key;
+  }
+  function prettifyKey(key){
+    var names = {
+      ' ':'Space', 'ArrowLeft':'←', 'ArrowRight':'→', 'ArrowUp':'↑', 'ArrowDown':'↓',
+      'Enter':'Enter', 'Escape':'Esc', 'Tab':'Tab'
+    };
+    if(key in names){ return names[key]; }
+    if(key.length === 1){ return key.toUpperCase(); }
+    return key;
+  }
 
   var questionTimerStart = null;
   var questionTimerInterval = null;
@@ -596,6 +665,18 @@
   function updateSettingsSubrows(){
     document.getElementById('auto-advance-subrow').style.display = settings.autoAdvance ? 'flex' : 'none';
     document.getElementById('target-pace-subrow').style.display = settings.showTimer ? 'flex' : 'none';
+    document.getElementById('keybind-grid').style.display = settings.keybinds ? 'grid' : 'none';
+    document.getElementById('next-key-subrow').style.display = settings.keybinds ? 'flex' : 'none';
+  }
+  function getTargetKey(target){
+    return target === 'NEXT' ? settings.nextKey : settings.answerKeys[target];
+  }
+  function renderKeybindButtons(){
+    LETTERS.concat(['NEXT']).forEach(function(target){
+      if(target === listeningTarget){ return; } // leave "Press a key…" showing
+      var btn = document.getElementById('keybind-'+target);
+      if(btn){ btn.textContent = prettifyKey(getTargetKey(target)); }
+    });
   }
   function openSettings(){
     var activeScreen = document.querySelector('.screen.active');
@@ -607,6 +688,7 @@
     document.getElementById('setting-keybinds').checked = settings.keybinds;
     document.getElementById('setting-timer').checked = settings.showTimer;
     document.getElementById('setting-target-pace').value = settings.targetSecPerQ;
+    renderKeybindButtons();
     updateSettingsSubrows();
     show('screen-settings');
   }
@@ -623,9 +705,18 @@
     settings.autoAdvanceDelayMs = parseInt(e.target.value, 10) || 1200;
     saveSettings();
   });
+  function updateKeyHints(){
+    var reviewHint = document.getElementById('review-key-hint');
+    var studyHint = document.getElementById('study-key-hint');
+    if(reviewHint){ reviewHint.style.display = settings.keybinds ? 'block' : 'none'; }
+    if(studyHint){ studyHint.style.display = settings.keybinds ? 'block' : 'none'; }
+  }
+
   document.getElementById('setting-keybinds').addEventListener('change', function(e){
     settings.keybinds = e.target.checked;
     saveSettings();
+    updateSettingsSubrows();
+    updateKeyHints();
   });
   document.getElementById('setting-timer').addEventListener('change', function(e){
     settings.showTimer = e.target.checked;
@@ -640,17 +731,85 @@
     }
   });
 
-  // Keyboard shortcuts: 1-4 select answers A-D while an unanswered question is showing.
+  // Click a keybind button, then press any key to rebind it.
+  // Two answer options swap keys if they'd otherwise collide; the Next-question
+  // key is independent since it only ever applies after a question is answered.
+  LETTERS.concat(['NEXT']).forEach(function(target){
+    document.getElementById('keybind-'+target).addEventListener('click', function(){
+      if(listeningTarget && listeningTarget !== target){
+        var prevBtn = document.getElementById('keybind-'+listeningTarget);
+        if(prevBtn){ prevBtn.classList.remove('listening'); }
+      }
+      listeningTarget = target;
+      renderKeybindButtons();
+      var btn = document.getElementById('keybind-'+target);
+      btn.classList.add('listening');
+      btn.textContent = 'Press a key…';
+    });
+  });
+
+  // ---- Global keyboard shortcuts ----
   document.addEventListener('keydown', function(e){
+    // 1) Capturing a new key binding on the settings screen.
+    if(listeningTarget){
+      e.preventDefault();
+      var target = listeningTarget;
+      if(e.key === 'Escape'){
+        document.getElementById('keybind-'+target).classList.remove('listening');
+        listeningTarget = null;
+        renderKeybindButtons();
+        return;
+      }
+      var newKey = keyNorm(e.key);
+      if(target !== 'NEXT'){
+        var otherLetter = null;
+        LETTERS.forEach(function(l){
+          if(l !== target && settings.answerKeys[l] === newKey){ otherLetter = l; }
+        });
+        var oldKey = settings.answerKeys[target];
+        settings.answerKeys[target] = newKey;
+        if(otherLetter){ settings.answerKeys[otherLetter] = oldKey; }
+      } else {
+        settings.nextKey = newKey;
+      }
+      saveSettings();
+      document.getElementById('keybind-'+target).classList.remove('listening');
+      listeningTarget = null;
+      renderKeybindButtons();
+      return;
+    }
+
     if(!settings.keybinds){ return; }
-    var quizScreen = document.getElementById('screen-quiz');
-    if(!quizScreen.classList.contains('active')){ return; }
-    if(questionAnswered){ return; }
     var tag = (e.target && e.target.tagName) || '';
     if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA'){ return; }
-    var map = {'1':'A','2':'B','3':'C','4':'D'};
-    var letter = map[e.key];
-    if(letter){ selectAnswer(letter); }
+
+    // 2) Quiz screen: answer-selection shortcuts, or the Next-question shortcut
+    //    once a question has already been answered.
+    if(document.getElementById('screen-quiz').classList.contains('active')){
+      var pressed = keyNorm(e.key);
+      if(!questionAnswered){
+        var matchLetter = null;
+        LETTERS.forEach(function(l){ if(settings.answerKeys[l] === pressed){ matchLetter = l; } });
+        if(matchLetter){ e.preventDefault(); selectAnswer(matchLetter); return; }
+      } else if(pressed === keyNorm(settings.nextKey) && btnNext.style.display !== 'none'){
+        e.preventDefault();
+        goToNextQuestion();
+        return;
+      }
+    }
+
+    // 3) Previous/Next navigation on the Review and Study screens.
+    var reviewActive = document.getElementById('screen-review').classList.contains('active');
+    var studyActive = document.getElementById('screen-study').classList.contains('active');
+    if(reviewActive || studyActive){
+      if(e.key === 'ArrowRight'){
+        e.preventDefault();
+        document.getElementById(reviewActive ? 'btn-review-next' : 'btn-study-next').click();
+      } else if(e.key === 'ArrowLeft'){
+        e.preventDefault();
+        document.getElementById(reviewActive ? 'btn-review-prev' : 'btn-study-prev').click();
+      }
+    }
   });
 
   function show(id){
@@ -745,7 +904,8 @@
     LETTERS.forEach(function(letter){
       var b = document.createElement('button');
       b.className='choice-btn';
-      b.innerHTML = '<span class="c-letter">'+letter+'</span>';
+      var hint = settings.keybinds ? '<span class="c-key-hint">'+prettifyKey(settings.answerKeys[letter])+'</span>' : '';
+      b.innerHTML = '<span class="c-letter">'+letter+'</span>'+hint;
       b.addEventListener('click', function(){ selectAnswer(letter); });
       choiceRow.appendChild(b);
     });
@@ -796,6 +956,7 @@
       feedback.textContent = 'Not quite — the correct answer is '+item.answer+'.';
     }
     btnNext.style.display='inline-block';
+    btnNext.textContent = 'Next Question →' + (settings.keybinds ? ' ('+prettifyKey(settings.nextKey)+')' : '');
 
     if(settings.autoAdvance){
       clearTimeout(autoAdvanceTimeout);
@@ -892,6 +1053,7 @@
     document.getElementById('review-correct').innerHTML = 'Correct answer: <b style="color:var(--green)">'+item.answer+'</b>';
     document.getElementById('btn-review-prev').disabled = (reviewIndex===0);
     document.getElementById('btn-review-next').textContent = (reviewIndex===reviewSource.items.length-1) ? 'Done' : 'Next →';
+    updateKeyHints();
   }
   document.getElementById('btn-review').addEventListener('click', function(){
     openReview(state.missed.slice(), state.answers, 'screen-results');
@@ -951,6 +1113,7 @@
     document.getElementById('study-img').src = item.img;
     document.getElementById('study-jump-select').value = studyState.index;
     resetStudyReveal();
+    updateKeyHints();
   }
   document.getElementById('btn-study').addEventListener('click', function(){
     var all = ALL_Q.map(function(q){ return q.number; }).sort(function(a,b){ return a-b; });
