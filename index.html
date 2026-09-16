@@ -37,7 +37,7 @@
   .serif{ font-family:"Iowan Old Style","Palatino Linotype",Georgia,"Times New Roman",serif; }
   .wrap{ max-width:840px; margin:0 auto; }
 
-  .masthead{ text-align:center; margin-bottom:24px; color:#EDEFF4; }
+  .masthead{ text-align:center; margin-bottom:24px; color:#EDEFF4; position:relative; }
   .masthead .kicker{
     font-size:11px; letter-spacing:.16em; text-transform:uppercase;
     color:var(--gold); font-weight:700; margin-bottom:10px;
@@ -46,6 +46,13 @@
     font-size:30px; margin:0 0 8px; font-weight:600; letter-spacing:.005em;
   }
   .masthead p{ margin:0; font-size:14px; color:#AEB7C9; }
+  .btn-settings-gear{
+    position:absolute; top:-2px; right:0; width:36px; height:36px; border-radius:8px;
+    border:1px solid rgba(237,239,244,0.28); background:rgba(237,239,244,0.06);
+    color:#EDEFF4; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  .btn-settings-gear:hover{ background:rgba(237,239,244,0.16); }
 
   .sheet{
     background:var(--paper);
@@ -109,7 +116,12 @@
   .progress-row{
     display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
   }
+  .progress-left{ display:flex; align-items:center; gap:10px; }
   .progress-label{ font-size:13px; color:var(--ink-2); font-weight:700; }
+  .progress-timer{
+    font-size:12px; color:var(--gold-2); font-weight:800; background:var(--paper-2);
+    padding:3px 9px; border-radius:12px; letter-spacing:.01em;
+  }
   .progress-score{ font-size:13px; color:var(--ink-3); }
   .progress-track{
     height:6px; background:var(--paper-2); border-radius:4px; overflow:hidden; margin-bottom:22px;
@@ -214,6 +226,23 @@
   .modal-actions{ display:flex; gap:10px; }
   .modal-actions .btn{ flex:1; }
 
+  /* ---- Pace / timing summary on results screen ---- */
+  .pace-section{ margin:-6px 0 22px; text-align:center; }
+  .pace-line{ font-size:13px; color:var(--ink-2); margin-bottom:4px; }
+  .pace-value{ font-weight:800; color:var(--ink); }
+  .pace-good{ color:var(--green); font-weight:800; }
+  .pace-slow{ color:var(--red); font-weight:800; }
+
+  /* ---- Settings screen ---- */
+  .settings-subrow{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 4px 2px;
+  }
+  .settings-subrow select, .settings-subrow input[type=number]{
+    padding:8px 10px; border-radius:6px; border:1.5px solid var(--line);
+    font-family:inherit; font-size:14px; background:#fff; color:var(--ink); width:78px;
+  }
+
   /* ---- Review screen ---- */
   .review-tag{
     display:inline-block; font-size:12px; font-weight:700; letter-spacing:.05em;
@@ -231,6 +260,7 @@
 <div class="wrap">
 
   <div class="masthead">
+    <button class="btn-settings-gear" id="btn-settings" title="Settings" type="button">⚙</button>
     <div class="kicker">Practice Mode</div>
     <h1 class="serif">33rd ITPEC IP Exam</h1>
     <p>IT Passport Examination · April 2026 · 100 items</p>
@@ -273,7 +303,10 @@
         <button class="btn-quit-link" id="btn-quit">✕ Quit Practice</button>
       </div>
       <div class="progress-row">
-        <div class="progress-label" id="progress-label">Question 1 of 100</div>
+        <div class="progress-left">
+          <div class="progress-label" id="progress-label">Question 1 of 100</div>
+          <div class="progress-timer" id="progress-timer" style="display:none;">⏱ 0:00</div>
+        </div>
         <div class="progress-score" id="progress-score">Score: 0</div>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -296,6 +329,8 @@
         <div class="score-den">questions correct</div>
         <div class="score-pct" id="res-pct">0%</div>
       </div>
+
+      <div class="pace-section" id="pace-section"></div>
 
       <div id="missed-section"></div>
 
@@ -349,6 +384,69 @@
       </div>
     </div>
 
+    <!-- SETTINGS SCREEN -->
+    <div class="screen" id="screen-settings">
+      <div class="study-topbar">
+        <div class="progress-label">Settings</div>
+        <button class="btn-quit-link" id="btn-settings-done">✕ Close</button>
+      </div>
+
+      <div class="field">
+        <label>Answering</label>
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Auto-advance to next question</div>
+            <div class="t-sub">Move on automatically after you answer, instead of pressing Next</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-auto-advance">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-subrow" id="auto-advance-subrow">
+          <span class="t-sub">Delay before advancing</span>
+          <select id="setting-auto-advance-delay">
+            <option value="600">0.6s</option>
+            <option value="1200">1.2s</option>
+            <option value="1800">1.8s</option>
+            <option value="2500">2.5s</option>
+          </select>
+        </div>
+
+        <div class="toggle-row" style="margin-top:16px;">
+          <div>
+            <div class="t-label">Keyboard shortcuts</div>
+            <div class="t-sub">Press 1–4 on your keyboard to pick answers A–D</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-keybinds">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Timing</label>
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Show timer while answering</div>
+            <div class="t-sub">Track time per question and see your average pace at the end</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-timer">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-subrow" id="target-pace-subrow">
+          <span class="t-sub">Target pace (PHILNITS-style)</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" id="setting-target-pace" min="10" max="600" step="1">
+            <span class="t-sub">sec / question</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="footer-note">Question images are cropped from the official 2026S IT Passport exam booklet · practice use only</div>
@@ -378,8 +476,49 @@
     quizItems: [],
     currentIndex: 0,
     answers: {},   // number -> {chosen, correct}
-    missed: []
+    missed: [],
+    questionTimes: {}  // number -> seconds taken to answer
   };
+
+  var SETTINGS_KEY = 'itpecQuizSettings_v1';
+  var SETTINGS_DEFAULTS = {
+    autoAdvance: false,
+    autoAdvanceDelayMs: 1200,
+    keybinds: true,
+    showTimer: true,
+    targetSecPerQ: 72
+  };
+  function loadSettings(){
+    try{
+      var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+      if(saved && typeof saved === 'object'){
+        var merged = {};
+        Object.keys(SETTINGS_DEFAULTS).forEach(function(k){
+          merged[k] = (k in saved) ? saved[k] : SETTINGS_DEFAULTS[k];
+        });
+        return merged;
+      }
+    }catch(e){ /* ignore */ }
+    return Object.assign({}, SETTINGS_DEFAULTS);
+  }
+  function saveSettings(){
+    try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+    catch(e){ /* storage unavailable — fail silently */ }
+  }
+  var settings = loadSettings();
+  var settingsReturnScreen = 'screen-setup';
+
+  var questionTimerStart = null;
+  var questionTimerInterval = null;
+  var autoAdvanceTimeout = null;
+  var questionAnswered = false;
+
+  function formatClock(totalSec){
+    totalSec = Math.max(0, Math.round(totalSec));
+    var m = Math.floor(totalSec/60);
+    var s = totalSec % 60;
+    return m + ':' + (s<10 ? '0' : '') + s;
+  }
 
   var studyState = { items: [], index: 0 };
   var reviewSource = null; // {items, answers, returnScreen}
@@ -395,6 +534,9 @@
   function saveHistoryEntry(s){
     var total = s.quizItems.length;
     var correct = Object.keys(s.answers).filter(function(k){return s.answers[k].correct;}).length;
+    var times = Object.keys(s.questionTimes || {}).map(function(k){ return s.questionTimes[k]; });
+    var totalSec = times.length ? times.reduce(function(a,b){ return a+b; }, 0) : null;
+    var avgSec = times.length ? totalSec/times.length : null;
     var entry = {
       id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
       date: new Date().toISOString(),
@@ -403,7 +545,9 @@
       shuffle: !!s.shuffle,
       itemNumbers: s.quizItems.map(function(q){return q.number;}),
       answers: s.answers,
-      missed: s.missed.slice()
+      missed: s.missed.slice(),
+      avgSec: avgSec,
+      totalSec: totalSec
     };
     var hist = loadHistory();
     hist.unshift(entry);
@@ -448,6 +592,67 @@
     if(e.target === confirmModal){ closeConfirmModal(); }
   });
 
+  // ---- Settings screen ----
+  function updateSettingsSubrows(){
+    document.getElementById('auto-advance-subrow').style.display = settings.autoAdvance ? 'flex' : 'none';
+    document.getElementById('target-pace-subrow').style.display = settings.showTimer ? 'flex' : 'none';
+  }
+  function openSettings(){
+    var activeScreen = document.querySelector('.screen.active');
+    if(activeScreen && activeScreen.id !== 'screen-settings'){
+      settingsReturnScreen = activeScreen.id;
+    }
+    document.getElementById('setting-auto-advance').checked = settings.autoAdvance;
+    document.getElementById('setting-auto-advance-delay').value = String(settings.autoAdvanceDelayMs);
+    document.getElementById('setting-keybinds').checked = settings.keybinds;
+    document.getElementById('setting-timer').checked = settings.showTimer;
+    document.getElementById('setting-target-pace').value = settings.targetSecPerQ;
+    updateSettingsSubrows();
+    show('screen-settings');
+  }
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+  document.getElementById('btn-settings-done').addEventListener('click', function(){
+    show(settingsReturnScreen);
+  });
+  document.getElementById('setting-auto-advance').addEventListener('change', function(e){
+    settings.autoAdvance = e.target.checked;
+    saveSettings();
+    updateSettingsSubrows();
+  });
+  document.getElementById('setting-auto-advance-delay').addEventListener('change', function(e){
+    settings.autoAdvanceDelayMs = parseInt(e.target.value, 10) || 1200;
+    saveSettings();
+  });
+  document.getElementById('setting-keybinds').addEventListener('change', function(e){
+    settings.keybinds = e.target.checked;
+    saveSettings();
+  });
+  document.getElementById('setting-timer').addEventListener('change', function(e){
+    settings.showTimer = e.target.checked;
+    saveSettings();
+    updateSettingsSubrows();
+  });
+  document.getElementById('setting-target-pace').addEventListener('input', function(e){
+    var v = parseInt(e.target.value, 10);
+    if(!isNaN(v) && v > 0){
+      settings.targetSecPerQ = v;
+      saveSettings();
+    }
+  });
+
+  // Keyboard shortcuts: 1-4 select answers A-D while an unanswered question is showing.
+  document.addEventListener('keydown', function(e){
+    if(!settings.keybinds){ return; }
+    var quizScreen = document.getElementById('screen-quiz');
+    if(!quizScreen.classList.contains('active')){ return; }
+    if(questionAnswered){ return; }
+    var tag = (e.target && e.target.tagName) || '';
+    if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA'){ return; }
+    var map = {'1':'A','2':'B','3':'C','4':'D'};
+    var letter = map[e.key];
+    if(letter){ selectAnswer(letter); }
+  });
+
   function show(id){
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
     document.getElementById(id).classList.add('active');
@@ -484,6 +689,9 @@
     state.currentIndex = 0;
     state.answers = {};
     state.missed = [];
+    state.questionTimes = {};
+    clearInterval(questionTimerInterval);
+    clearTimeout(autoAdvanceTimeout);
     show('screen-quiz');
     renderQuestion();
   });
@@ -498,7 +706,10 @@
     state.currentIndex = 0;
     state.answers = {};
     state.missed = [];
+    state.questionTimes = {};
     state.shuffle = !!opts.shuffle;
+    clearInterval(questionTimerInterval);
+    clearTimeout(autoAdvanceTimeout);
     show('screen-quiz');
     renderQuestion();
   }
@@ -510,6 +721,8 @@
 
   document.getElementById('btn-quit').addEventListener('click', function(){
     askConfirm('Quit this practice session? Your progress on this set won\'t be saved.', function(){
+      clearInterval(questionTimerInterval);
+      clearTimeout(autoAdvanceTimeout);
       show('screen-setup');
     });
   });
@@ -527,6 +740,7 @@
     feedback.className='feedback';
     feedback.textContent='';
     btnNext.style.display='none';
+    questionAnswered = false;
 
     LETTERS.forEach(function(letter){
       var b = document.createElement('button');
@@ -535,10 +749,32 @@
       b.addEventListener('click', function(){ selectAnswer(letter); });
       choiceRow.appendChild(b);
     });
+
+    clearInterval(questionTimerInterval);
+    clearTimeout(autoAdvanceTimeout);
+    var timerEl = document.getElementById('progress-timer');
+    if(settings.showTimer){
+      timerEl.style.display = 'inline-block';
+      questionTimerStart = Date.now();
+      timerEl.textContent = '⏱ 0:00';
+      questionTimerInterval = setInterval(function(){
+        timerEl.textContent = '⏱ ' + formatClock((Date.now()-questionTimerStart)/1000);
+      }, 250);
+    } else {
+      timerEl.style.display = 'none';
+      questionTimerStart = Date.now();
+    }
   }
 
   function selectAnswer(letter){
+    if(questionAnswered){ return; }
+    questionAnswered = true;
+    clearInterval(questionTimerInterval);
+
     var item = state.quizItems[state.currentIndex];
+    var elapsedSec = (Date.now() - questionTimerStart) / 1000;
+    state.questionTimes[item.number] = elapsedSec;
+
     var correct = (letter === item.answer);
     state.answers[item.number] = {chosen:letter, correct:correct};
     if(!correct){ state.missed.push(item.number); }
@@ -560,16 +796,25 @@
       feedback.textContent = 'Not quite — the correct answer is '+item.answer+'.';
     }
     btnNext.style.display='inline-block';
+
+    if(settings.autoAdvance){
+      clearTimeout(autoAdvanceTimeout);
+      autoAdvanceTimeout = setTimeout(goToNextQuestion, settings.autoAdvanceDelayMs);
+    }
   }
 
-  btnNext.addEventListener('click', function(){
+  function goToNextQuestion(){
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
     state.currentIndex++;
     if(state.currentIndex >= state.quizItems.length){
       showResults();
     } else {
       renderQuestion();
     }
-  });
+  }
+
+  btnNext.addEventListener('click', goToNextQuestion);
 
   // ---- Results screen ----
   function showResults(){
@@ -577,6 +822,24 @@
     var correct = Object.keys(state.answers).filter(function(k){return state.answers[k].correct;}).length;
     document.getElementById('res-score').textContent = correct+'/'+total;
     document.getElementById('res-pct').textContent = Math.round((correct/total)*100)+'% correct';
+
+    var paceSection = document.getElementById('pace-section');
+    var times = Object.keys(state.questionTimes).map(function(k){ return state.questionTimes[k]; });
+    if(settings.showTimer && times.length > 0){
+      var totalSec = times.reduce(function(a,b){ return a+b; }, 0);
+      var avgSec = totalSec / times.length;
+      var target = settings.targetSecPerQ;
+      var diff = avgSec - target;
+      var paceClass = diff <= 0 ? 'pace-good' : 'pace-slow';
+      var paceWord = diff <= 0 ? 'under your target pace' : 'over your target pace';
+      paceSection.innerHTML =
+        '<div class="pace-line">Average time per question: <span class="pace-value">'+avgSec.toFixed(1)+'s</span>'
+        + ' · Total time: <span class="pace-value">'+formatClock(totalSec)+'</span></div>'
+        + '<div class="pace-line">Target pace: '+target+'s/question — you were '
+        + '<span class="'+paceClass+'">'+Math.abs(diff).toFixed(1)+'s '+paceWord+'</span></div>';
+    } else {
+      paceSection.innerHTML = '';
+    }
 
     var missedSection = document.getElementById('missed-section');
     var btnReview = document.getElementById('btn-review');
@@ -727,7 +990,8 @@
         +     ' <span style="font-size:13px;color:var(--gold-2);font-weight:700;">('+pct+'%)</span></div>'
         +   '<div class="history-date">'+dateStr+'</div>'
         + '</div>'
-        + '<div class="history-meta">'+entry.missed.length+' missed'+(entry.shuffle ? ' · shuffled' : '')+'</div>'
+        + '<div class="history-meta">'+entry.missed.length+' missed'+(entry.shuffle ? ' · shuffled' : '')
+        +   (entry.avgSec ? ' · avg '+entry.avgSec.toFixed(1)+'s/question' : '')+'</div>'
         + '<div class="history-actions">'
         +   '<button class="btn btn-ghost btn-hist-retake" data-id="'+entry.id+'">Retake</button>'
         +   (entry.missed.length>0 ? '<button class="btn btn-ghost btn-hist-review" data-id="'+entry.id+'">Review</button>' : '')
