@@ -269,6 +269,33 @@
   .review-answer-line b{ font-weight:800; }
   .review-nav{ display:flex; justify-content:space-between; margin-top:20px; }
 
+  /* ---- Exam picker (setup screen) ---- */
+  .exam-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:520px){ .exam-row{ grid-template-columns:1fr; } }
+  .exam-chip{
+    border:1.5px solid var(--line); background:#fff; border-radius:8px;
+    padding:14px 10px; cursor:pointer; font-family:inherit; text-align:center;
+    transition:border-color .15s, background .15s, color .15s, transform .08s;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .exam-chip:hover{ border-color:var(--gold); }
+  .exam-chip:active{ transform:translateY(1px); }
+  .exam-chip .exam-code{
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,"Times New Roman",serif;
+    font-size:20px; font-weight:700; color:var(--navy); letter-spacing:.01em;
+  }
+  .exam-chip .exam-name{ font-size:12.5px; font-weight:700; color:var(--ink-2); }
+  .exam-chip .exam-date{ font-size:11.5px; color:var(--ink-3); }
+  .exam-chip.selected{ border-color:var(--gold-2); background:var(--navy); }
+  .exam-chip.selected .exam-code{ color:#fff; }
+  .exam-chip.selected .exam-name{ color:#D9DEE9; }
+  .exam-chip.selected .exam-date{ color:#AEB7C9; }
+
+  .exam-tag{
+    display:inline-block; font-size:11px; font-weight:800; letter-spacing:.06em;
+    color:var(--gold-2); background:var(--paper-2); padding:2px 8px; border-radius:10px; margin-right:6px;
+  }
+
   .footer-note{ text-align:center; color:#8792A6; font-size:12px; margin-top:20px; }
 </style>
 </head>
@@ -278,14 +305,19 @@
   <div class="masthead">
     <button class="btn-settings-gear" id="btn-settings" title="Settings" type="button">⚙</button>
     <div class="kicker">Practice Mode</div>
-    <h1 class="serif">33rd ITPEC IP Exam</h1>
-    <p>IT Passport Examination · April 2026 · 100 items</p>
+    <h1 class="serif" id="exam-title">33rd ITPEC IP Exam</h1>
+    <p id="exam-subtitle">IT Passport Examination · April 2026 · 100 items</p>
   </div>
 
   <div class="sheet">
 
     <!-- SETUP SCREEN -->
     <div class="screen active" id="screen-setup">
+      <div class="field">
+        <label>Choose exam</label>
+        <div class="exam-row" id="exam-row"></div>
+      </div>
+
       <div class="field">
         <label>How many questions?</label>
         <div class="count-row" id="count-row"></div>
@@ -489,7 +521,7 @@
 
   </div>
 
-  <div class="footer-note">Question images are cropped from the official 2026S IT Passport exam booklet · practice use only</div>
+  <div class="footer-note" id="footer-note">Question images are cropped from the official 2026S IT Passport exam booklet · practice use only</div>
 </div>
 
 <div class="modal-overlay" id="confirm-modal">
@@ -503,14 +535,42 @@
 </div>
 
 <script id="qdata" type="application/json">[{"number": 1, "answer": "B", "img": "images/q001.jpg"}, {"number": 2, "answer": "A", "img": "images/q002.jpg"}, {"number": 3, "answer": "D", "img": "images/q003.jpg"}, {"number": 4, "answer": "A", "img": "images/q004.jpg"}, {"number": 5, "answer": "B", "img": "images/q005.jpg"}, {"number": 6, "answer": "B", "img": "images/q006.jpg"}, {"number": 7, "answer": "D", "img": "images/q007.jpg"}, {"number": 8, "answer": "C", "img": "images/q008.jpg"}, {"number": 9, "answer": "C", "img": "images/q009.jpg"}, {"number": 10, "answer": "C", "img": "images/q010.jpg"}, {"number": 11, "answer": "B", "img": "images/q011.jpg"}, {"number": 12, "answer": "B", "img": "images/q012.jpg"}, {"number": 13, "answer": "B", "img": "images/q013.jpg"}, {"number": 14, "answer": "A", "img": "images/q014.jpg"}, {"number": 15, "answer": "B", "img": "images/q015.jpg"}, {"number": 16, "answer": "A", "img": "images/q016.jpg"}, {"number": 17, "answer": "B", "img": "images/q017.jpg"}, {"number": 18, "answer": "D", "img": "images/q018.jpg"}, {"number": 19, "answer": "A", "img": "images/q019.jpg"}, {"number": 20, "answer": "C", "img": "images/q020.jpg"}, {"number": 21, "answer": "C", "img": "images/q021.jpg"}, {"number": 22, "answer": "A", "img": "images/q022.jpg"}, {"number": 23, "answer": "B", "img": "images/q023.jpg"}, {"number": 24, "answer": "B", "img": "images/q024.jpg"}, {"number": 25, "answer": "C", "img": "images/q025.jpg"}, {"number": 26, "answer": "C", "img": "images/q026.jpg"}, {"number": 27, "answer": "C", "img": "images/q027.jpg"}, {"number": 28, "answer": "A", "img": "images/q028.jpg"}, {"number": 29, "answer": "B", "img": "images/q029.jpg"}, {"number": 30, "answer": "B", "img": "images/q030.jpg"}, {"number": 31, "answer": "D", "img": "images/q031.jpg"}, {"number": 32, "answer": "B", "img": "images/q032.jpg"}, {"number": 33, "answer": "D", "img": "images/q033.jpg"}, {"number": 34, "answer": "C", "img": "images/q034.jpg"}, {"number": 35, "answer": "B", "img": "images/q035.jpg"}, {"number": 36, "answer": "B", "img": "images/q036.jpg"}, {"number": 37, "answer": "C", "img": "images/q037.jpg"}, {"number": 38, "answer": "D", "img": "images/q038.jpg"}, {"number": 39, "answer": "D", "img": "images/q039.jpg"}, {"number": 40, "answer": "B", "img": "images/q040.jpg"}, {"number": 41, "answer": "D", "img": "images/q041.jpg"}, {"number": 42, "answer": "C", "img": "images/q042.jpg"}, {"number": 43, "answer": "D", "img": "images/q043.jpg"}, {"number": 44, "answer": "C", "img": "images/q044.jpg"}, {"number": 45, "answer": "B", "img": "images/q045.jpg"}, {"number": 46, "answer": "D", "img": "images/q046.jpg"}, {"number": 47, "answer": "A", "img": "images/q047.jpg"}, {"number": 48, "answer": "B", "img": "images/q048.jpg"}, {"number": 49, "answer": "D", "img": "images/q049.jpg"}, {"number": 50, "answer": "D", "img": "images/q050.jpg"}, {"number": 51, "answer": "A", "img": "images/q051.jpg"}, {"number": 52, "answer": "B", "img": "images/q052.jpg"}, {"number": 53, "answer": "C", "img": "images/q053.jpg"}, {"number": 54, "answer": "C", "img": "images/q054.jpg"}, {"number": 55, "answer": "D", "img": "images/q055.jpg"}, {"number": 56, "answer": "A", "img": "images/q056.jpg"}, {"number": 57, "answer": "B", "img": "images/q057.jpg"}, {"number": 58, "answer": "D", "img": "images/q058.jpg"}, {"number": 59, "answer": "A", "img": "images/q059.jpg"}, {"number": 60, "answer": "B", "img": "images/q060.jpg"}, {"number": 61, "answer": "C", "img": "images/q061.jpg"}, {"number": 62, "answer": "A", "img": "images/q062.jpg"}, {"number": 63, "answer": "A", "img": "images/q063.jpg"}, {"number": 64, "answer": "A", "img": "images/q064.jpg"}, {"number": 65, "answer": "A", "img": "images/q065.jpg"}, {"number": 66, "answer": "C", "img": "images/q066.jpg"}, {"number": 67, "answer": "C", "img": "images/q067.jpg"}, {"number": 68, "answer": "D", "img": "images/q068.jpg"}, {"number": 69, "answer": "C", "img": "images/q069.jpg"}, {"number": 70, "answer": "C", "img": "images/q070.jpg"}, {"number": 71, "answer": "B", "img": "images/q071.jpg"}, {"number": 72, "answer": "C", "img": "images/q072.jpg"}, {"number": 73, "answer": "D", "img": "images/q073.jpg"}, {"number": 74, "answer": "C", "img": "images/q074.jpg"}, {"number": 75, "answer": "C", "img": "images/q075.jpg"}, {"number": 76, "answer": "D", "img": "images/q076.jpg"}, {"number": 77, "answer": "B", "img": "images/q077.jpg"}, {"number": 78, "answer": "B", "img": "images/q078.jpg"}, {"number": 79, "answer": "C", "img": "images/q079.jpg"}, {"number": 80, "answer": "C", "img": "images/q080.jpg"}, {"number": 81, "answer": "C", "img": "images/q081.jpg"}, {"number": 82, "answer": "D", "img": "images/q082.jpg"}, {"number": 83, "answer": "D", "img": "images/q083.jpg"}, {"number": 84, "answer": "B", "img": "images/q084.jpg"}, {"number": 85, "answer": "A", "img": "images/q085.jpg"}, {"number": 86, "answer": "D", "img": "images/q086.jpg"}, {"number": 87, "answer": "D", "img": "images/q087.jpg"}, {"number": 88, "answer": "C", "img": "images/q088.jpg"}, {"number": 89, "answer": "D", "img": "images/q089.jpg"}, {"number": 90, "answer": "B", "img": "images/q090.jpg"}, {"number": 91, "answer": "B", "img": "images/q091.jpg"}, {"number": 92, "answer": "B", "img": "images/q092.jpg"}, {"number": 93, "answer": "B", "img": "images/q093.jpg"}, {"number": 94, "answer": "B", "img": "images/q094.jpg"}, {"number": 95, "answer": "B", "img": "images/q095.jpg"}, {"number": 96, "answer": "A", "img": "images/q096.jpg"}, {"number": 97, "answer": "D", "img": "images/q097.jpg"}, {"number": 98, "answer": "B", "img": "images/q098.jpg"}, {"number": 99, "answer": "B", "img": "images/q099.jpg"}, {"number": 100, "answer": "B", "img": "images/q100.jpg"}]</script>
+<script id="qdata-2025A" type="application/json">[{"number": 1, "answer": "C", "img": "images/2025A/q001.jpg"}, {"number": 2, "answer": "D", "img": "images/2025A/q002.jpg"}, {"number": 3, "answer": "D", "img": "images/2025A/q003.jpg"}, {"number": 4, "answer": "B", "img": "images/2025A/q004.jpg"}, {"number": 5, "answer": "D", "img": "images/2025A/q005.jpg"}, {"number": 6, "answer": "B", "img": "images/2025A/q006.jpg"}, {"number": 7, "answer": "B", "img": "images/2025A/q007.jpg"}, {"number": 8, "answer": "D", "img": "images/2025A/q008.jpg"}, {"number": 9, "answer": "D", "img": "images/2025A/q009.jpg"}, {"number": 10, "answer": "C", "img": "images/2025A/q010.jpg"}, {"number": 11, "answer": "A", "img": "images/2025A/q011.jpg"}, {"number": 12, "answer": "A", "img": "images/2025A/q012.jpg"}, {"number": 13, "answer": "D", "img": "images/2025A/q013.jpg"}, {"number": 14, "answer": "D", "img": "images/2025A/q014.jpg"}, {"number": 15, "answer": "D", "img": "images/2025A/q015.jpg"}, {"number": 16, "answer": "A", "img": "images/2025A/q016.jpg"}, {"number": 17, "answer": "C", "img": "images/2025A/q017.jpg"}, {"number": 18, "answer": "B", "img": "images/2025A/q018.jpg"}, {"number": 19, "answer": "A", "img": "images/2025A/q019.jpg"}, {"number": 20, "answer": "A", "img": "images/2025A/q020.jpg"}, {"number": 21, "answer": "B", "img": "images/2025A/q021.jpg"}, {"number": 22, "answer": "C", "img": "images/2025A/q022.jpg"}, {"number": 23, "answer": "B", "img": "images/2025A/q023.jpg"}, {"number": 24, "answer": "B", "img": "images/2025A/q024.jpg"}, {"number": 25, "answer": "A", "img": "images/2025A/q025.jpg"}, {"number": 26, "answer": "A", "img": "images/2025A/q026.jpg"}, {"number": 27, "answer": "C", "img": "images/2025A/q027.jpg"}, {"number": 28, "answer": "C", "img": "images/2025A/q028.jpg"}, {"number": 29, "answer": "D", "img": "images/2025A/q029.jpg"}, {"number": 30, "answer": "D", "img": "images/2025A/q030.jpg"}, {"number": 31, "answer": "C", "img": "images/2025A/q031.jpg"}, {"number": 32, "answer": "B", "img": "images/2025A/q032.jpg"}, {"number": 33, "answer": "D", "img": "images/2025A/q033.jpg"}, {"number": 34, "answer": "A", "img": "images/2025A/q034.jpg"}, {"number": 35, "answer": "A", "img": "images/2025A/q035.jpg"}, {"number": 36, "answer": "B", "img": "images/2025A/q036.jpg"}, {"number": 37, "answer": "B", "img": "images/2025A/q037.jpg"}, {"number": 38, "answer": "A", "img": "images/2025A/q038.jpg"}, {"number": 39, "answer": "A", "img": "images/2025A/q039.jpg"}, {"number": 40, "answer": "A", "img": "images/2025A/q040.jpg"}, {"number": 41, "answer": "A", "img": "images/2025A/q041.jpg"}, {"number": 42, "answer": "A", "img": "images/2025A/q042.jpg"}, {"number": 43, "answer": "C", "img": "images/2025A/q043.jpg"}, {"number": 44, "answer": "C", "img": "images/2025A/q044.jpg"}, {"number": 45, "answer": "B", "img": "images/2025A/q045.jpg"}, {"number": 46, "answer": "B", "img": "images/2025A/q046.jpg"}, {"number": 47, "answer": "B", "img": "images/2025A/q047.jpg"}, {"number": 48, "answer": "D", "img": "images/2025A/q048.jpg"}, {"number": 49, "answer": "D", "img": "images/2025A/q049.jpg"}, {"number": 50, "answer": "C", "img": "images/2025A/q050.jpg"}, {"number": 51, "answer": "C", "img": "images/2025A/q051.jpg"}, {"number": 52, "answer": "A", "img": "images/2025A/q052.jpg"}, {"number": 53, "answer": "C", "img": "images/2025A/q053.jpg"}, {"number": 54, "answer": "D", "img": "images/2025A/q054.jpg"}, {"number": 55, "answer": "A", "img": "images/2025A/q055.jpg"}, {"number": 56, "answer": "A", "img": "images/2025A/q056.jpg"}, {"number": 57, "answer": "C", "img": "images/2025A/q057.jpg"}, {"number": 58, "answer": "B", "img": "images/2025A/q058.jpg"}, {"number": 59, "answer": "D", "img": "images/2025A/q059.jpg"}, {"number": 60, "answer": "C", "img": "images/2025A/q060.jpg"}, {"number": 61, "answer": "A", "img": "images/2025A/q061.jpg"}, {"number": 62, "answer": "B", "img": "images/2025A/q062.jpg"}, {"number": 63, "answer": "B", "img": "images/2025A/q063.jpg"}, {"number": 64, "answer": "A", "img": "images/2025A/q064.jpg"}, {"number": 65, "answer": "C", "img": "images/2025A/q065.jpg"}, {"number": 66, "answer": "B", "img": "images/2025A/q066.jpg"}, {"number": 67, "answer": "B", "img": "images/2025A/q067.jpg"}, {"number": 68, "answer": "C", "img": "images/2025A/q068.jpg"}, {"number": 69, "answer": "B", "img": "images/2025A/q069.jpg"}, {"number": 70, "answer": "D", "img": "images/2025A/q070.jpg"}, {"number": 71, "answer": "B", "img": "images/2025A/q071.jpg"}, {"number": 72, "answer": "D", "img": "images/2025A/q072.jpg"}, {"number": 73, "answer": "A", "img": "images/2025A/q073.jpg"}, {"number": 74, "answer": "C", "img": "images/2025A/q074.jpg"}, {"number": 75, "answer": "A", "img": "images/2025A/q075.jpg"}, {"number": 76, "answer": "C", "img": "images/2025A/q076.jpg"}, {"number": 77, "answer": "C", "img": "images/2025A/q077.jpg"}, {"number": 78, "answer": "C", "img": "images/2025A/q078.jpg"}, {"number": 79, "answer": "B", "img": "images/2025A/q079.jpg"}, {"number": 80, "answer": "A", "img": "images/2025A/q080.jpg"}, {"number": 81, "answer": "A", "img": "images/2025A/q081.jpg"}, {"number": 82, "answer": "D", "img": "images/2025A/q082.jpg"}, {"number": 83, "answer": "C", "img": "images/2025A/q083.jpg"}, {"number": 84, "answer": "B", "img": "images/2025A/q084.jpg"}, {"number": 85, "answer": "A", "img": "images/2025A/q085.jpg"}, {"number": 86, "answer": "C", "img": "images/2025A/q086.jpg"}, {"number": 87, "answer": "A", "img": "images/2025A/q087.jpg"}, {"number": 88, "answer": "D", "img": "images/2025A/q088.jpg"}, {"number": 89, "answer": "B", "img": "images/2025A/q089.jpg"}, {"number": 90, "answer": "C", "img": "images/2025A/q090.jpg"}, {"number": 91, "answer": "C", "img": "images/2025A/q091.jpg"}, {"number": 92, "answer": "D", "img": "images/2025A/q092.jpg"}, {"number": 93, "answer": "A", "img": "images/2025A/q093.jpg"}, {"number": 94, "answer": "C", "img": "images/2025A/q094.jpg"}, {"number": 95, "answer": "B", "img": "images/2025A/q095.jpg"}, {"number": 96, "answer": "B", "img": "images/2025A/q096.jpg"}, {"number": 97, "answer": "A", "img": "images/2025A/q097.jpg"}, {"number": 98, "answer": "B", "img": "images/2025A/q098.jpg"}, {"number": 99, "answer": "C", "img": "images/2025A/q099.jpg"}, {"number": 100, "answer": "A", "img": "images/2025A/q100.jpg"}]</script>
+<script id="qdata-2025S" type="application/json">[{"number": 1, "answer": "D", "img": "images/2025S/q001.jpg"}, {"number": 2, "answer": "D", "img": "images/2025S/q002.jpg"}, {"number": 3, "answer": "C", "img": "images/2025S/q003.jpg"}, {"number": 4, "answer": "D", "img": "images/2025S/q004.jpg"}, {"number": 5, "answer": "B", "img": "images/2025S/q005.jpg"}, {"number": 6, "answer": "B", "img": "images/2025S/q006.jpg"}, {"number": 7, "answer": "D", "img": "images/2025S/q007.jpg"}, {"number": 8, "answer": "A", "img": "images/2025S/q008.jpg"}, {"number": 9, "answer": "A", "img": "images/2025S/q009.jpg"}, {"number": 10, "answer": "B", "img": "images/2025S/q010.jpg"}, {"number": 11, "answer": "C", "img": "images/2025S/q011.jpg"}, {"number": 12, "answer": "D", "img": "images/2025S/q012.jpg"}, {"number": 13, "answer": "A", "img": "images/2025S/q013.jpg"}, {"number": 14, "answer": "A", "img": "images/2025S/q014.jpg"}, {"number": 15, "answer": "B", "img": "images/2025S/q015.jpg"}, {"number": 16, "answer": "C", "img": "images/2025S/q016.jpg"}, {"number": 17, "answer": "C", "img": "images/2025S/q017.jpg"}, {"number": 18, "answer": "A", "img": "images/2025S/q018.jpg"}, {"number": 19, "answer": "C", "img": "images/2025S/q019.jpg"}, {"number": 20, "answer": "C", "img": "images/2025S/q020.jpg"}, {"number": 21, "answer": "A", "img": "images/2025S/q021.jpg"}, {"number": 22, "answer": "D", "img": "images/2025S/q022.jpg"}, {"number": 23, "answer": "D", "img": "images/2025S/q023.jpg"}, {"number": 24, "answer": "C", "img": "images/2025S/q024.jpg"}, {"number": 25, "answer": "D", "img": "images/2025S/q025.jpg"}, {"number": 26, "answer": "D", "img": "images/2025S/q026.jpg"}, {"number": 27, "answer": "B", "img": "images/2025S/q027.jpg"}, {"number": 28, "answer": "A", "img": "images/2025S/q028.jpg"}, {"number": 29, "answer": "D", "img": "images/2025S/q029.jpg"}, {"number": 30, "answer": "A", "img": "images/2025S/q030.jpg"}, {"number": 31, "answer": "C", "img": "images/2025S/q031.jpg"}, {"number": 32, "answer": "C", "img": "images/2025S/q032.jpg"}, {"number": 33, "answer": "C", "img": "images/2025S/q033.jpg"}, {"number": 34, "answer": "D", "img": "images/2025S/q034.jpg"}, {"number": 35, "answer": "A", "img": "images/2025S/q035.jpg"}, {"number": 36, "answer": "D", "img": "images/2025S/q036.jpg"}, {"number": 37, "answer": "D", "img": "images/2025S/q037.jpg"}, {"number": 38, "answer": "A", "img": "images/2025S/q038.jpg"}, {"number": 39, "answer": "B", "img": "images/2025S/q039.jpg"}, {"number": 40, "answer": "A", "img": "images/2025S/q040.jpg"}, {"number": 41, "answer": "C", "img": "images/2025S/q041.jpg"}, {"number": 42, "answer": "B", "img": "images/2025S/q042.jpg"}, {"number": 43, "answer": "D", "img": "images/2025S/q043.jpg"}, {"number": 44, "answer": "C", "img": "images/2025S/q044.jpg"}, {"number": 45, "answer": "C", "img": "images/2025S/q045.jpg"}, {"number": 46, "answer": "C", "img": "images/2025S/q046.jpg"}, {"number": 47, "answer": "C", "img": "images/2025S/q047.jpg"}, {"number": 48, "answer": "C", "img": "images/2025S/q048.jpg"}, {"number": 49, "answer": "D", "img": "images/2025S/q049.jpg"}, {"number": 50, "answer": "C", "img": "images/2025S/q050.jpg"}, {"number": 51, "answer": "B", "img": "images/2025S/q051.jpg"}, {"number": 52, "answer": "A", "img": "images/2025S/q052.jpg"}, {"number": 53, "answer": "A", "img": "images/2025S/q053.jpg"}, {"number": 54, "answer": "C", "img": "images/2025S/q054.jpg"}, {"number": 55, "answer": "D", "img": "images/2025S/q055.jpg"}, {"number": 56, "answer": "D", "img": "images/2025S/q056.jpg"}, {"number": 57, "answer": "D", "img": "images/2025S/q057.jpg"}, {"number": 58, "answer": "D", "img": "images/2025S/q058.jpg"}, {"number": 59, "answer": "D", "img": "images/2025S/q059.jpg"}, {"number": 60, "answer": "B", "img": "images/2025S/q060.jpg"}, {"number": 61, "answer": "D", "img": "images/2025S/q061.jpg"}, {"number": 62, "answer": "A", "img": "images/2025S/q062.jpg"}, {"number": 63, "answer": "B", "img": "images/2025S/q063.jpg"}, {"number": 64, "answer": "C", "img": "images/2025S/q064.jpg"}, {"number": 65, "answer": "D", "img": "images/2025S/q065.jpg"}, {"number": 66, "answer": "B", "img": "images/2025S/q066.jpg"}, {"number": 67, "answer": "A", "img": "images/2025S/q067.jpg"}, {"number": 68, "answer": "D", "img": "images/2025S/q068.jpg"}, {"number": 69, "answer": "B", "img": "images/2025S/q069.jpg"}, {"number": 70, "answer": "A", "img": "images/2025S/q070.jpg"}, {"number": 71, "answer": "D", "img": "images/2025S/q071.jpg"}, {"number": 72, "answer": "D", "img": "images/2025S/q072.jpg"}, {"number": 73, "answer": "D", "img": "images/2025S/q073.jpg"}, {"number": 74, "answer": "B", "img": "images/2025S/q074.jpg"}, {"number": 75, "answer": "B", "img": "images/2025S/q075.jpg"}, {"number": 76, "answer": "A", "img": "images/2025S/q076.jpg"}, {"number": 77, "answer": "C", "img": "images/2025S/q077.jpg"}, {"number": 78, "answer": "C", "img": "images/2025S/q078.jpg"}, {"number": 79, "answer": "C", "img": "images/2025S/q079.jpg"}, {"number": 80, "answer": "D", "img": "images/2025S/q080.jpg"}, {"number": 81, "answer": "A", "img": "images/2025S/q081.jpg"}, {"number": 82, "answer": "A", "img": "images/2025S/q082.jpg"}, {"number": 83, "answer": "C", "img": "images/2025S/q083.jpg"}, {"number": 84, "answer": "C", "img": "images/2025S/q084.jpg"}, {"number": 85, "answer": "C", "img": "images/2025S/q085.jpg"}, {"number": 86, "answer": "C", "img": "images/2025S/q086.jpg"}, {"number": 87, "answer": "D", "img": "images/2025S/q087.jpg"}, {"number": 88, "answer": "D", "img": "images/2025S/q088.jpg"}, {"number": 89, "answer": "C", "img": "images/2025S/q089.jpg"}, {"number": 90, "answer": "A", "img": "images/2025S/q090.jpg"}, {"number": 91, "answer": "D", "img": "images/2025S/q091.jpg"}, {"number": 92, "answer": "A", "img": "images/2025S/q092.jpg"}, {"number": 93, "answer": "D", "img": "images/2025S/q093.jpg"}, {"number": 94, "answer": "A", "img": "images/2025S/q094.jpg"}, {"number": 95, "answer": "B", "img": "images/2025S/q095.jpg"}, {"number": 96, "answer": "C", "img": "images/2025S/q096.jpg"}, {"number": 97, "answer": "A", "img": "images/2025S/q097.jpg"}, {"number": 98, "answer": "A", "img": "images/2025S/q098.jpg"}, {"number": 99, "answer": "B", "img": "images/2025S/q099.jpg"}, {"number": 100, "answer": "B", "img": "images/2025S/q100.jpg"}]</script>
 <script>
 (function(){
-  var ALL_Q = JSON.parse(document.getElementById('qdata').textContent);
+  // ---- Exams ----
+  // 2026S = the original exam bundled with this app (images/qNNN.jpg).
+  // The others live in images/<code>/qNNN.jpg.
+  var EXAMS = [
+    {id:'2026S', name:'33rd ITPEC IP Exam', short:'33rd ITPEC', date:'April 2026',   dataId:'qdata'},
+    {id:'2025A', name:'32nd ITPEC IP Exam', short:'32nd ITPEC', date:'October 2025', dataId:'qdata-2025A'},
+    {id:'2025S', name:'31st ITPEC IP Exam', short:'31st ITPEC', date:'April 2025',   dataId:'qdata-2025S'}
+  ];
+  var DEFAULT_EXAM_ID = '2026S';
+  var EXAM_KEY = 'itpecSelectedExam_v1';
+  var EXAM_DATA = {};
+  EXAMS.forEach(function(ex){
+    EXAM_DATA[ex.id] = JSON.parse(document.getElementById(ex.dataId).textContent);
+  });
+  function examById(id){
+    return EXAMS.filter(function(e){ return e.id === id; })[0] || EXAMS[0];
+  }
+  function loadSavedExamId(){
+    try{
+      var v = localStorage.getItem(EXAM_KEY);
+      if(v && EXAM_DATA[v]){ return v; }
+    }catch(e){ /* ignore */ }
+    return DEFAULT_EXAM_ID;
+  }
+  var currentExamId = loadSavedExamId();
+  var ALL_Q = EXAM_DATA[currentExamId];
   var LETTERS = ['A','B','C','D'];
   var HISTORY_KEY = 'itpecQuizHistory_v1';
   var HISTORY_MAX = 50;
 
   var state = {
+    exam: currentExamId,   // exam the quiz in progress belongs to
     count: 20,
     shuffle: true,
     quizItems: [],
@@ -608,6 +668,7 @@
     var avgSec = times.length ? totalSec/times.length : null;
     var entry = {
       id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      exam: s.exam || DEFAULT_EXAM_ID,
       date: new Date().toISOString(),
       total: total,
       correct: correct,
@@ -827,7 +888,7 @@
       var chip = document.createElement('button');
       chip.type='button';
       chip.className='count-chip'+(n===state.count?' selected':'');
-      chip.textContent = (n===100 ? 'All 100' : n);
+      chip.textContent = (n===100 ? 'All '+ALL_Q.length : n);
       chip.addEventListener('click', function(){
         state.count = n;
         document.querySelectorAll('.count-chip').forEach(function(c){c.classList.remove('selected');});
@@ -838,12 +899,49 @@
   }
   renderCountRow();
 
+  // ---- Exam picker ----
+  var examRow = document.getElementById('exam-row');
+  function renderExamRow(){
+    examRow.innerHTML = '';
+    EXAMS.forEach(function(ex){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'exam-chip' + (ex.id === currentExamId ? ' selected' : '');
+      b.setAttribute('data-exam', ex.id);
+      b.innerHTML = '<span class="exam-code">'+ex.id+'</span>'
+                  + '<span class="exam-name">'+ex.short+'</span>'
+                  + '<span class="exam-date">'+ex.date+'</span>';
+      b.addEventListener('click', function(){ setExam(ex.id); });
+      examRow.appendChild(b);
+    });
+  }
+  function applyExamChrome(){
+    var ex = examById(currentExamId);
+    document.getElementById('exam-title').textContent = ex.name;
+    document.getElementById('exam-subtitle').textContent =
+      'IT Passport Examination · '+ex.date+' · '+ALL_Q.length+' items';
+    document.getElementById('footer-note').textContent =
+      'Question images are cropped from the official '+ex.id+' IT Passport exam booklet · practice use only';
+  }
+  function setExam(id){
+    if(!EXAM_DATA[id]){ id = DEFAULT_EXAM_ID; }
+    currentExamId = id;
+    ALL_Q = EXAM_DATA[id];
+    try{ localStorage.setItem(EXAM_KEY, id); }catch(e){ /* storage unavailable — fail silently */ }
+    renderExamRow();
+    renderCountRow();
+    applyExamChrome();
+  }
+  renderExamRow();
+  applyExamChrome();
+
   document.getElementById('toggle-shuffle').addEventListener('change', function(e){ state.shuffle = e.target.checked; });
 
   document.getElementById('btn-start').addEventListener('click', function(){
     var pool = ALL_Q.slice();
     pool = state.shuffle ? shuffleArr(pool) : pool.sort(function(a,b){return a.number-b.number;});
     pool = pool.slice(0, state.count);
+    state.exam = currentExamId;
     state.quizItems = pool;
     state.currentIndex = 0;
     state.answers = {};
@@ -859,8 +957,10 @@
   // (used by "Retry Wrong Answers" and "Retake" from history).
   function startQuizFromNumbers(numbers, opts){
     opts = opts || {};
-    var items = numbers.map(byNumber).filter(function(x){ return !!x; });
+    var examId = opts.exam || currentExamId;
+    var items = numbers.map(function(n){ return byNumber(n, examId); }).filter(function(x){ return !!x; });
     if(opts.shuffle){ items = shuffleArr(items); }
+    state.exam = examId;
     state.quizItems = items;
     state.currentIndex = 0;
     state.answers = {};
@@ -1028,26 +1128,27 @@
   });
 
   document.getElementById('btn-retry-wrong').addEventListener('click', function(){
-    startQuizFromNumbers(state.missed.slice(), {shuffle:false});
+    startQuizFromNumbers(state.missed.slice(), {shuffle:false, exam:state.exam});
   });
 
   // ---- Review screen ----
   // reviewSource = { items: [numbers...], answers: {number->{chosen,correct}}, returnScreen: 'screen-results'|'screen-history' }
   var reviewIndex = 0;
-  function byNumber(num){
-    return ALL_Q.filter(function(q){return q.number===num;})[0];
+  function byNumber(num, examId){
+    var list = examId && EXAM_DATA[examId] ? EXAM_DATA[examId] : ALL_Q;
+    return list.filter(function(q){return q.number===num;})[0];
   }
-  function openReview(items, answersMap, returnScreen){
-    reviewSource = { items: items, answers: answersMap, returnScreen: returnScreen || 'screen-results' };
+  function openReview(items, answersMap, returnScreen, examId){
+    reviewSource = { items: items, answers: answersMap, returnScreen: returnScreen || 'screen-results', exam: examId || currentExamId };
     reviewIndex = 0;
     show('screen-review');
     renderReview();
   }
   function renderReview(){
     var num = reviewSource.items[reviewIndex];
-    var item = byNumber(num);
+    var item = byNumber(num, reviewSource.exam);
     var ans = reviewSource.answers[num];
-    document.getElementById('review-label').textContent = 'Missed '+(reviewIndex+1)+' of '+reviewSource.items.length+' — Q'+num;
+    document.getElementById('review-label').textContent = 'Missed '+(reviewIndex+1)+' of '+reviewSource.items.length+' — Q'+num+' · '+reviewSource.exam;
     document.getElementById('review-img').src = item.img;
     document.getElementById('review-your').innerHTML = 'Your answer: <b style="color:var(--red)">'+(ans ? ans.chosen : '—')+'</b>';
     document.getElementById('review-correct').innerHTML = 'Correct answer: <b style="color:var(--green)">'+item.answer+'</b>';
@@ -1056,7 +1157,7 @@
     updateKeyHints();
   }
   document.getElementById('btn-review').addEventListener('click', function(){
-    openReview(state.missed.slice(), state.answers, 'screen-results');
+    openReview(state.missed.slice(), state.answers, 'screen-results', state.exam);
   });
   document.getElementById('btn-review-prev').addEventListener('click', function(){
     if(reviewIndex>0){ reviewIndex--; renderReview(); }
@@ -1073,7 +1174,7 @@
     if(e.target.classList.contains('missed-chip')){
       var num = parseInt(e.target.textContent.replace('Q',''),10);
       var idx = state.missed.indexOf(num);
-      openReview(state.missed.slice(), state.answers, 'screen-results');
+      openReview(state.missed.slice(), state.answers, 'screen-results', state.exam);
       reviewIndex = idx;
       renderReview();
     }
@@ -1153,7 +1254,7 @@
         +     ' <span style="font-size:13px;color:var(--gold-2);font-weight:700;">('+pct+'%)</span></div>'
         +   '<div class="history-date">'+dateStr+'</div>'
         + '</div>'
-        + '<div class="history-meta">'+entry.missed.length+' missed'+(entry.shuffle ? ' · shuffled' : '')
+        + '<div class="history-meta"><span class="exam-tag">'+(entry.exam || DEFAULT_EXAM_ID)+'</span>'+entry.missed.length+' missed'+(entry.shuffle ? ' · shuffled' : '')
         +   (entry.avgSec ? ' · avg '+entry.avgSec.toFixed(1)+'s/question' : '')+'</div>'
         + '<div class="history-actions">'
         +   '<button class="btn btn-ghost btn-hist-retake" data-id="'+entry.id+'">Retake</button>'
@@ -1185,9 +1286,11 @@
     var entry = hist.filter(function(h){ return h.id===id; })[0];
     if(!entry){ return; }
     if(e.target.classList.contains('btn-hist-retake')){
-      startQuizFromNumbers(entry.itemNumbers, {shuffle:false});
+      var retakeExam = entry.exam || DEFAULT_EXAM_ID;   // entries saved before multi-exam support belong to 2026S
+      setExam(retakeExam);
+      startQuizFromNumbers(entry.itemNumbers, {shuffle:false, exam:retakeExam});
     } else if(e.target.classList.contains('btn-hist-review')){
-      openReview(entry.missed.slice(), entry.answers, 'screen-history');
+      openReview(entry.missed.slice(), entry.answers, 'screen-history', entry.exam || DEFAULT_EXAM_ID);
     } else if(e.target.classList.contains('btn-hist-delete')){
       askConfirm('Delete this history entry?', function(){
         var updated = loadHistory().filter(function(h){ return h.id!==id; });
