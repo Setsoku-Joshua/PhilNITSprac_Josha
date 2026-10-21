@@ -335,6 +335,16 @@
             <span class="slider"></span>
           </label>
         </div>
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Hide score until finished</div>
+            <div class="t-sub">Don't show the running score while answering — see it on the results screen</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-hide-score">
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
 
       <button class="btn btn-primary" id="btn-start">Start Practice</button>
@@ -588,7 +598,8 @@
     answerKeys: {A:'1', B:'2', C:'3', D:'4'},
     nextKey: ' ',
     showTimer: true,
-    targetSecPerQ: 72
+    targetSecPerQ: 72,
+    hideScore: false
   };
   function loadSettings(){
     var merged = {
@@ -598,7 +609,8 @@
       answerKeys: Object.assign({}, SETTINGS_DEFAULTS.answerKeys),
       nextKey: SETTINGS_DEFAULTS.nextKey,
       showTimer: SETTINGS_DEFAULTS.showTimer,
-      targetSecPerQ: SETTINGS_DEFAULTS.targetSecPerQ
+      targetSecPerQ: SETTINGS_DEFAULTS.targetSecPerQ,
+      hideScore: SETTINGS_DEFAULTS.hideScore
     };
     try{
       var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
@@ -937,6 +949,13 @@
 
   document.getElementById('toggle-shuffle').addEventListener('change', function(e){ state.shuffle = e.target.checked; });
 
+  var toggleHideScore = document.getElementById('toggle-hide-score');
+  toggleHideScore.checked = !!settings.hideScore;
+  toggleHideScore.addEventListener('change', function(e){
+    settings.hideScore = e.target.checked;
+    saveSettings();
+  });
+
   document.getElementById('btn-start').addEventListener('click', function(){
     var pool = ALL_Q.slice();
     pool = state.shuffle ? shuffleArr(pool) : pool.sort(function(a,b){return a.number-b.number;});
@@ -990,7 +1009,9 @@
     var item = state.quizItems[state.currentIndex];
     document.getElementById('progress-label').textContent = 'Question '+(state.currentIndex+1)+' of '+state.quizItems.length;
     var correctSoFar = Object.keys(state.answers).filter(function(k){return state.answers[k].correct;}).length;
-    document.getElementById('progress-score').textContent = 'Score: '+correctSoFar;
+    var scoreEl = document.getElementById('progress-score');
+    scoreEl.textContent = 'Score: '+correctSoFar;
+    scoreEl.style.display = settings.hideScore ? 'none' : '';
     document.getElementById('progress-fill').style.width = Math.round((state.currentIndex/state.quizItems.length)*100)+'%';
 
     document.getElementById('qimg').src = item.img;
