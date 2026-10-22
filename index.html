@@ -152,6 +152,8 @@
   .choice-btn.correct .c-letter{ color:var(--green); }
   .choice-btn.wrong{ border-color:var(--red); background:var(--red-bg); }
   .choice-btn.wrong .c-letter{ color:var(--red); }
+  .choice-btn.chosen{ border-color:var(--navy); background:var(--paper-2); }
+  .choice-btn.chosen .c-letter{ color:var(--navy); }
 
   .feedback{
     display:none; border-radius:8px; padding:14px 16px; margin-bottom:18px; font-size:14.5px; font-weight:600;
@@ -342,6 +344,16 @@
           </div>
           <label class="switch">
             <input type="checkbox" id="toggle-hide-score">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Hide if answers are correct</div>
+            <div class="t-sub">Only your pick is marked — right/wrong is revealed on the results screen (also hides the running score)</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-hide-feedback">
             <span class="slider"></span>
           </label>
         </div>
@@ -599,7 +611,8 @@
     nextKey: ' ',
     showTimer: true,
     targetSecPerQ: 72,
-    hideScore: false
+    hideScore: false,
+    hideFeedback: false
   };
   function loadSettings(){
     var merged = {
@@ -610,7 +623,8 @@
       nextKey: SETTINGS_DEFAULTS.nextKey,
       showTimer: SETTINGS_DEFAULTS.showTimer,
       targetSecPerQ: SETTINGS_DEFAULTS.targetSecPerQ,
-      hideScore: SETTINGS_DEFAULTS.hideScore
+      hideScore: SETTINGS_DEFAULTS.hideScore,
+      hideFeedback: SETTINGS_DEFAULTS.hideFeedback
     };
     try{
       var saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
@@ -956,6 +970,13 @@
     saveSettings();
   });
 
+  var toggleHideFeedback = document.getElementById('toggle-hide-feedback');
+  toggleHideFeedback.checked = !!settings.hideFeedback;
+  toggleHideFeedback.addEventListener('change', function(e){
+    settings.hideFeedback = e.target.checked;
+    saveSettings();
+  });
+
   document.getElementById('btn-start').addEventListener('click', function(){
     var pool = ALL_Q.slice();
     pool = state.shuffle ? shuffleArr(pool) : pool.sort(function(a,b){return a.number-b.number;});
@@ -1011,7 +1032,7 @@
     var correctSoFar = Object.keys(state.answers).filter(function(k){return state.answers[k].correct;}).length;
     var scoreEl = document.getElementById('progress-score');
     scoreEl.textContent = 'Score: '+correctSoFar;
-    scoreEl.style.display = settings.hideScore ? 'none' : '';
+    scoreEl.style.display = (settings.hideScore || settings.hideFeedback) ? 'none' : '';
     document.getElementById('progress-fill').style.width = Math.round((state.currentIndex/state.quizItems.length)*100)+'%';
 
     document.getElementById('qimg').src = item.img;
@@ -1064,17 +1085,23 @@
     btns.forEach(function(b){
       var l = b.querySelector('.c-letter').textContent;
       b.disabled = true;
-      if(l === item.answer){ b.classList.add('correct'); }
-      else if(l === letter){ b.classList.add('wrong'); }
+      if(settings.hideFeedback){
+        if(l === letter){ b.classList.add('chosen'); }
+      } else {
+        if(l === item.answer){ b.classList.add('correct'); }
+        else if(l === letter){ b.classList.add('wrong'); }
+      }
     });
 
-    feedback.classList.add('show');
-    if(correct){
-      feedback.classList.add('correct');
-      feedback.textContent = 'Correct! The answer is '+item.answer+'.';
-    } else {
-      feedback.classList.add('wrong');
-      feedback.textContent = 'Not quite — the correct answer is '+item.answer+'.';
+    if(!settings.hideFeedback){
+      feedback.classList.add('show');
+      if(correct){
+        feedback.classList.add('correct');
+        feedback.textContent = 'Correct! The answer is '+item.answer+'.';
+      } else {
+        feedback.classList.add('wrong');
+        feedback.textContent = 'Not quite — the correct answer is '+item.answer+'.';
+      }
     }
     btnNext.style.display='inline-block';
     btnNext.textContent = 'Next Question →' + (settings.keybinds ? ' ('+prettifyKey(settings.nextKey)+')' : '');
